@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="Gesällprov:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/Gesällprov_jar</output-path>
+    <root id="archive" name="Gesällprov.jar">
+      <element id="module-output" name="Gesällprov" />
+    </root>
+  </artifact>
+</component>
