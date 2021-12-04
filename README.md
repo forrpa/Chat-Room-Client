@@ -3,9 +3,8 @@
 Chat Room client that works with my Chat-Room-Server.
 Uses MySQL to store users.
 
-To use this client you must register an account and/or log in. 
-
 You can chat with everyone that is online on the same port number and you can also send private messages. 
+Before using you must register an account and/or log in. 
 
 HOW TO USE
 You can start program with default values ip 127.0.0.1 and port 2000
