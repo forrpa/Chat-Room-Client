@@ -7,9 +7,11 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Login page where users can log in and register
+ * Login page where clients can log in and register a new account
+ * Clients must log in to use chat client
+ * Uses MYSQL database with external library MySQL Connector Java
  *
- * @author Jennifer McCarthy, jemc7787, 930124-0983
+ * @author Jennifer McCarthy
  */
 class Login extends JFrame implements ActionListener {
 
@@ -18,6 +20,12 @@ class Login extends JFrame implements ActionListener {
     private final int port;
     private final String ip;
 
+    /**
+     * Constructor that saves client port number and ip address
+     *
+     * @param port client port number
+     * @param ip client ip address
+     */
     Login(int port, String ip) {
         this.port = port;
         this.ip = ip;
@@ -75,97 +83,28 @@ class Login extends JFrame implements ActionListener {
     }
 
     /**
-     * Inner class that is used as a key and action listener when user tries to log in
+     * Sanitizes string if it contains HTML code
+     *
+     * @param s string to be sanitized
+     * @return censur if contains HTML code or the original string
      */
-    class LoginListener implements KeyListener, ActionListener {
-        @Override
-        public void keyTyped(KeyEvent e) {
-
+    public String sanitizeString(String s) {
+        Pattern p = Pattern.compile("<.*>");
+        Matcher matcher = p.matcher(s);
+        if (matcher.find()) {
+            return "censur";
         }
-
-        @Override
-        public void keyPressed(KeyEvent e) {
-
-        }
-
-        /**
-         * Method that is called when user presses enter key
-         * Check if username and password is null and if not call login method
-         *
-         * @param e
-         */
-        @Override
-        public void keyReleased(KeyEvent e) {
-            String username = usernameText.getText();
-            String password = passwordText.getText();
-
-            if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-                if (username.isEmpty() || password.isEmpty()){
-                    label.setText("");
-                    label.setText("Username and password can't be empty!");
-                } else {
-                    login(username, password);
-                }
-            }
-        }
-
-        /**
-         * Method that is called when user presses 'Log in' button
-         * Check if username and password is null and if not call login method
-         *
-         * @param e
-         */
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            String username = usernameText.getText();
-            String password = passwordText.getText();
-
-            if (username.isEmpty() || password.isEmpty()){
-                label.setText("");
-                label.setText("Username and password cant be empty!");
-            } else {
-                login(username, password);
-            }
-        }
-
-        /**
-         * Checks if username and password exists in database and if they ar correct
-         * If correct a new client will be created with port, ip address and username and login form will not be visible
-         * If not correct a label will print that it is wrong username or password
-         *
-         * @param username user to be logged in
-         * @param password user password
-         */
-        public void login(String username, String password){
-            try {
-                Connection connection = DriverManager.getConnection("jdbc:mysql://atlas.dsv.su.se:3306/db_20790470", "usr_20790470", "790470");
-                PreparedStatement preparedStatement = connection.prepareStatement("select username, password from user where username = ? and password = ?");
-                preparedStatement.setString(1, username);
-                preparedStatement.setString(2, password);
-                ResultSet resultSet = preparedStatement.executeQuery();
-                if (resultSet.next()) {
-                    dispose();
-                    Client client = new Client(port, ip, username);
-                    client.run();
-                    setVisible(false);
-                } else {
-                    label.setText("");
-                    label.setText("Wrong username or password");
-                }
-
-            } catch (SQLException sqlException) {
-                sqlException.printStackTrace();
-            }
-        }
+        return s;
     }
 
     /**
      * Method that is called when user presses 'register' button
-     * If username not exists a new user is created in sql database with username and password
+     * If username not exists a new user is created in SQL database with username and password
      * If username exists a message appears saying that username exists
      *
-     * @param actionEvent
+     * @param actionEvent action event
      */
+    @Override
     public void actionPerformed(ActionEvent actionEvent)
     {
         String username = usernameText.getText();
@@ -177,7 +116,6 @@ class Login extends JFrame implements ActionListener {
         } else {
             String sanitizedUsername = sanitizeString(username);
             String sanitizedPassword = sanitizeString(password);
-
             if (sanitizedUsername.equals("censur") || sanitizedPassword.equals("censur")){
                 label.setText("");
                 label.setText("No HTML!");
@@ -199,22 +137,93 @@ class Login extends JFrame implements ActionListener {
     }
 
     /**
-     * Sanitizes string if it contains html code
-     *
-     * @param s string to be sanitized
-     * @return string
+     * Inner class that is used as a key and action listener when user tries to log in
      */
-    public String sanitizeString(String s) {
-        Pattern p = Pattern.compile("<.*>");
-        Matcher matcher = p.matcher(s);
-        if (matcher.find()) {
-            return "censur";
+    class LoginListener implements KeyListener, ActionListener {
+
+        @Override
+        public void keyTyped(KeyEvent e) {
+
         }
-        return s;
+
+        @Override
+        public void keyPressed(KeyEvent e) {
+
+        }
+
+        /**
+         * Method that is called when user presses enter key
+         * Check if username and password is empty and if not call login method
+         *
+         * @param e key event
+         */
+        @Override
+        public void keyReleased(KeyEvent e) {
+            String username = usernameText.getText();
+            String password = passwordText.getText();
+
+            if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                if (username.isEmpty() || password.isEmpty()){
+                    label.setText("");
+                    label.setText("Username and password can't be empty!");
+                } else {
+                    login(username, password);
+                }
+            }
+        }
+
+        /**
+         * Method that is called when user presses 'Log in' button
+         * Check if username and password is empty and if not call login method
+         *
+         * @param e key event
+         */
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            String username = usernameText.getText();
+            String password = passwordText.getText();
+
+            if (username.isEmpty() || password.isEmpty()){
+                label.setText("");
+                label.setText("Username and password cant be empty!");
+            } else {
+                login(username, password);
+            }
+        }
+
+        /**
+         * Checks if username and password exists in database and if they ar correct using prepared statement
+         * If correct a new client will be created with port, ip address and username and login form will disappear
+         * If not correct a label will print that it is wrong username or password
+         *
+         * @param username user to be logged in
+         * @param password user password
+         */
+        public void login(String username, String password){
+            try {
+                Connection connection = DriverManager.getConnection("jdbc:mysql://atlas.dsv.su.se:3306/db_20790470", "usr_20790470", "790470");
+                PreparedStatement preparedStatement = connection.prepareStatement("select username, password from user where username = ? and password = ?");
+                preparedStatement.setString(1, username);
+                preparedStatement.setString(2, password);
+                ResultSet resultSet = preparedStatement.executeQuery();
+                if (resultSet.next()) {
+                    dispose();
+                    Client client = new Client(port, ip, username);
+                    client.run();
+                    setVisible(false);
+                } else {
+                    label.setText("");
+                    label.setText("Wrong username or password");
+                }
+            } catch (SQLException sqlException) {
+                sqlException.printStackTrace();
+            }
+        }
     }
 
     /**
      * Main method that connects to jdbc database and starts a new Login page with standard or user inputted port and ip address
+     * Default port is 2000 and default ip address is 127.0.0.1
      *
      * @param args potential port and ip address
      */
@@ -222,9 +231,9 @@ class Login extends JFrame implements ActionListener {
         int port = 2000;
         String ip = "127.0.0.1";
 
-        if (args.length == 1) {
+        if (args.length == 1) { //User only enters ip address
             ip = args[0];
-        } else if (args.length == 2) {
+        } else if (args.length == 2) { //User enters both ip and port
             ip = args[0];
             port = Integer.parseInt(args[1]);
         }

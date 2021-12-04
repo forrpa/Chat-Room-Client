@@ -12,13 +12,13 @@ import javax.swing.*;
 
 /**
  * Chat client that sends and receives text messages from other clients via a chat server using stream sockets
+ * If not connected to a chat server the client will shut down
  *
- * @author Jennifer McCarthy, jemc7787, 930124-0983
+ * @author Jennifer McCarthy
  */
 public class Client extends JFrame {
 
     private final ArrayList<String> connectedUsernames = new ArrayList<>();
-
     private final int port;
     private final String ip;
     private PrintWriter printWriter;
@@ -65,12 +65,12 @@ public class Client extends JFrame {
         jTextArea.setEditable(false);
 
         jTextField = new JTextField();
-        jTextField.setBorder(BorderFactory.createLineBorder(button));;
+        jTextField.setBorder(BorderFactory.createLineBorder(button));
         jTextField.addKeyListener(new SendMessageListener());
 
         JButton jButton = new JButton("Send");
         jButton.setBackground(button);
-        jButton.setBorder(BorderFactory.createLineBorder(button));;
+        jButton.setBorder(BorderFactory.createLineBorder(button));
         jButton.setPreferredSize(new Dimension(60,40));
         jButton.addActionListener(new SendMessageListener());
 
@@ -81,8 +81,8 @@ public class Client extends JFrame {
         sendPanel.add(jTextField, BorderLayout.CENTER);
         sendPanel.add(jButton, BorderLayout.EAST);
 
-        listModel = new DefaultListModel<String>();
-        jList = new JList<String>(listModel);
+        listModel = new DefaultListModel<>();
+        jList = new JList<>(listModel);
         updateListModel();
 
         jList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -111,7 +111,6 @@ public class Client extends JFrame {
      * If not succeeded the program will shut down
      */
     public void run() {
-
         try {
             Socket socket = new Socket(ip, port);
             BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
@@ -120,7 +119,6 @@ public class Client extends JFrame {
             ReceiverThread receiverThread = new ReceiverThread(this, bufferedReader);
             receiverThread.start();
             this.printWriter.println(username);
-
         } catch (Exception e) {
             System.exit(0);
         }
@@ -150,37 +148,6 @@ public class Client extends JFrame {
             return;
         }
         printWriter.println("[" + username + ">" + receiver + "]: " + msg);
-    }
-
-    /**
-     * Inner class that is used as a key listener to the text field so that a text message will be sent when pressing enter or pressing 'send' button
-     */
-    class SendMessageListener implements KeyListener, ActionListener {
-        @Override
-        public void keyTyped(KeyEvent e) {
-
-        }
-
-        @Override
-        public void keyPressed(KeyEvent e) {
-
-        }
-
-        @Override
-        public void keyReleased(KeyEvent e) {
-            String msg = jTextField.getText();
-            if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-                sendMessage(msg);
-                jTextField.setText("");
-            }
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            String msg = jTextField.getText();
-            sendMessage(msg);
-            jTextField.setText("");
-        }
     }
 
     /**
@@ -220,5 +187,46 @@ public class Client extends JFrame {
      */
     public String getUsername() {
         return username;
+    }
+
+    /**
+     * Inner class that is used as a key listener to the text field so that a text message will be sent when pressing enter or pressing 'send' button
+     */
+    class SendMessageListener implements KeyListener, ActionListener {
+        @Override
+        public void keyTyped(KeyEvent e) {
+
+        }
+
+        @Override
+        public void keyPressed(KeyEvent e) {
+
+        }
+
+        /**
+         * Sends a message if user presses Enter key
+         *
+         * @param e key event
+         */
+        @Override
+        public void keyReleased(KeyEvent e) {
+            String msg = jTextField.getText();
+            if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                sendMessage(msg);
+                jTextField.setText("");
+            }
+        }
+
+        /**
+         * Sends a message if user presses Send button
+         *
+         * @param e key event
+         */
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            String msg = jTextField.getText();
+            sendMessage(msg);
+            jTextField.setText("");
+        }
     }
 }

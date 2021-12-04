@@ -15,7 +15,7 @@ public class ReceiverThread extends Thread {
     private final BufferedReader bufferedReader;
 
     /**
-     * Constructor that sets the thread's client and reader
+     * Constructor that sets the thread's client and buffered reader
      *
      * @param client the client that will receive the message
      * @param bufferedReader is used to read incoming messages
@@ -33,24 +33,7 @@ public class ReceiverThread extends Thread {
     @Override
     public void run(){
 
-        /* Receives all online clients usernames from the server and prints them */
-        try{
-            String onlineList = bufferedReader.readLine();
-            System.out.println(onlineList);
-            if (onlineList.length() > 0) {
-                onlineList = onlineList.substring(0, onlineList.length() -1);
-                List<String> list = new ArrayList<>(Arrays.asList(onlineList.split(",")));
-                for (String s : list){
-                    client.addToList(s);
-                }
-                client.updateListModel();
-            }
-
-        } catch(Exception e){
-            e.printStackTrace();
-        }
-
-        /* Listens for incoming messages */
+        addOnlineUsernames();
         while(true){
             try{
                 String msg = bufferedReader.readLine();
@@ -58,7 +41,7 @@ public class ReceiverThread extends Thread {
 
                 if (msg != null) {
                     if (msg.startsWith("CONNECTED")) {
-                        username = msg.substring(msg.indexOf("[") + 1, msg.indexOf("]"));
+                        username = getUsername(msg);
                         if (username.equals(client.getUsername())){
                             client.printMessage("Welcome " + username + "!");
                         } else {
@@ -67,7 +50,7 @@ public class ReceiverThread extends Thread {
                             client.printMessage(username + " just joined!");
                         }
                     } else if (msg.startsWith("DISCONNECTED")) {
-                        username = msg.substring(msg.indexOf("[") + 1, msg.indexOf("]"));
+                        username = getUsername(msg);
                         client.removeFromList(username);
                         client.updateListModel();
                         client.printMessage(username + " just left!");
@@ -78,6 +61,35 @@ public class ReceiverThread extends Thread {
             } catch(IOException e){
                 e.printStackTrace();
             }
+        }
+    }
+
+    /**
+     * Gets the client username
+     *
+     * @param msg the message where the username is
+     * @return username of message
+     */
+    public String getUsername(String msg){
+        return msg.substring(msg.indexOf("[") + 1, msg.indexOf("]"));
+    }
+
+    /**
+     * Receives all online clients usernames from the server and adds them to the client online list
+     */
+    public void addOnlineUsernames(){
+        try{
+            String onlineList = bufferedReader.readLine();
+            if (onlineList.length() > 0) {
+                onlineList = onlineList.substring(0, onlineList.length() -1);
+                List<String> list = new ArrayList<>(Arrays.asList(onlineList.split(",")));
+                for (String s : list){
+                    client.addToList(s);
+                }
+                client.updateListModel();
+            }
+        } catch(Exception e){
+            e.printStackTrace();
         }
     }
 }
