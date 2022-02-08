@@ -1,3 +1,4 @@
+![Skärmbild (64)](https://user-images.githubusercontent.com/77730310/152993669-d7e208ec-7aae-4bb1-998e-a39ef4279aca.png)
 ﻿#Chat-Room-Client
 
 Chat Room client that works with my Chat-Room-Server.
